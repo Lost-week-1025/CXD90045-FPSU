@@ -268,13 +268,65 @@ ux::wgtsys::Widget::setMode(m)
 
 ## 致谢与先验工作
 
-- [chocotan/a7c2-re](https://github.com/chocotan/a7c2-re) —— A7C II 的 QEMU 原生相机实验与整机转储。
-  **本项目的虚拟机可行性判断主要依据其公开的验收结果与方法描述。**
-- [ma1co/Sony-PMCA-RE](https://github.com/ma1co/Sony-PMCA-RE) —— Sony 相机 Python 工具箱与 PMCA 协议
-- [ma1co/qemu](https://github.com/ma1co/qemu) —— 带 `cxd90045` machine 的 QEMU fork
-- [DavidBuchanan314/ILCE-7M4-RE](https://github.com/DavidBuchanan314/ILCE-7M4-RE) —— A7 IV 逆向笔记
-- Sony OSS 发布的 Linux 源码（`https://oss.sony.net/Products/Linux/`）
+ZV-E10 的 QEMU 平台复现（`bionz` machine）、16 个分区的完整映射与镜像绝对偏移、
+`emmc.ko` 相关设备模型、反砖（ANTIBRICK）系统设计，以及那份长达 9,163 行的
+逐日推进主文档 —— 本项目关于"无实机能否复现"的几乎全部判断，
+都建立在这份工作之上。
 
+其中 `data/partition_map.tsv` 与 `scripts/gen_all_stubs.py` 直接支撑了本项目
+分区表的交叉验证。
+
+### chocotan — `a7c2-re`
+
+<https://github.com/chocotan/a7c2-re>
+
+ILCE-7CM2（固件 2.01）的原生 QEMU 相机实验与整机转储。
+
+最关键的启发是**"不模拟 GPU，而是软件执行 GPE 绘图请求 + ramfb 输出"**这一路线。
+他们用这条路把原固件菜单真实跑起来并可操作，窗口画布与原应用快照逐像素一致 ——
+这直接推翻了本项目前期"没有 GPU 模型就做不了显示"的判断。
+
+同时，他们"把验证通过和发送成功分开"的判读纪律，本项目全程照做。
+
+### YuuLuo — `a7c2-service-preload`
+
+<https://github.com/YuuLuo/a7c2-service-preload>
+
+ILCE-7CM2 从 USB 服务会话到一次性 root 代码执行的完整链路追踪：
+三轮挑战应答认证、`054C:0E8A` → `054C:0336` 的重新枚举、
+Jiritsu 文件命令的路径解析越界（`/tmp/jiritsu/../..`）、
+以及提权子进程消费 `/etc/ld.so.preload` 造成的信任边界问题。
+
+"根设备从哪来"这个问题，这份工作给出了目前最清晰的答案；
+它也诚实指出：preload 执行**不会**永久关闭签名校验，固件构造与刷写接受度是另一条独立链路。
+
+### DavidBuchanan314 — `ILCE-7M4-RE` / `Sony-ILCE-7M4-Linux`
+
+<https://github.com/DavidBuchanan314/ILCE-7M4-RE>
+<https://github.com/DavidBuchanan314/Sony-ILCE-7M4-Linux>
+
+ILCE-7M4（A7 IV）的逆向笔记与 Linux 移植工作。
+
+提供了"同代产品之间哪些部分共享、哪些部分必须重做"的参照视角 ——
+这对判断 ZV-1F 与 ZV-E10 的移植边界很有价值。
+
+### ma1co — `Sony-PMCA-RE` / `qemu` / `fwtool.py`
+
+<https://github.com/ma1co/Sony-PMCA-RE>
+<https://github.com/ma1co/qemu>
+<https://github.com/ma1co/fwtool.py>
+
+
+| 项目 | 本项目用到的部分 |
+|---|---|
+| `Sony-PMCA-RE` | 相机通信协议、PMCA 协议的理解；Senser 认证帧的公开参考实现 |
+| `qemu`（fork） | 带 `cxd90045` machine 的 QEMU 版本 —— 离线实验的底座 |
+| `fwtool.py` | **固件容器格式、两段解密算法、以及公开的密钥表** |
+
+需要特别说明：如果没有 `fwtool.py` 已经把容器结构与加密层摸清楚，
+本项目不会在这个起点上开始。本项目的贡献是在此之上做的
+**机型 ↔ 密钥映射判定**、**三层校验的完整解析**与**回打包的结构性分析**，
+而不是重新发现加密方案。
 方法论上从中学到的两条，本项目全程遵守：
 
 1. **把"验证通过"和"发送成功"分开** —— 输入命令返回成功，不代表固件处理了对应语义
