@@ -267,7 +267,11 @@ ux::wgtsys::Widget::setMode(m)
 ---
 
 ## 致谢与先验工作
+### Cokee（cokeenet）— `zve10-qemu`
 
+<https://github.com/cokeenet/zve10-qemu>
+
+**对本项目影响最大的一份材料。**
 ZV-E10 的 QEMU 平台复现（`bionz` machine）、16 个分区的完整映射与镜像绝对偏移、
 `emmc.ko` 相关设备模型、反砖（ANTIBRICK）系统设计，以及那份长达 9,163 行的
 逐日推进主文档 —— 本项目关于"无实机能否复现"的几乎全部判断，
