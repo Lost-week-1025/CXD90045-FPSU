@@ -1,0 +1,323 @@
+================================================================================
+DISCLAIMER / 免责声明
+项目：SOY-1F-64 — Sony CXD90045 平台固件包结构研究与 UI 交互移植可行性分析
+Project: SOY-1F-64 — Firmware Package Structure Research and UI Interaction
+         Porting Feasibility Study for the Sony CXD90045 Platform
+================================================================================
+
+本文档是本项目的使用前提。克隆、下载、阅读或以任何方式使用本仓库内容，
+即视为你已阅读、理解并接受以下全部条款。
+This document is a precondition for use. Cloning, downloading, reading or
+otherwise using this repository constitutes acceptance of all terms below.
+
+--------------------------------------------------------------------------------
+1. 独立研究声明 / Independent Research
+--------------------------------------------------------------------------------
+
+本项目是独立研究项目，与 Sony Corporation、Sony Electronics Inc. 及其任何
+子公司、关联公司之间不存在隶属、合作、授权、赞助或认可关系。
+
+This is an independent research project, not affiliated with, endorsed by,
+sponsored by, or authorized by Sony Corporation or any of its subsidiaries
+or affiliates.
+
+所有产品名称、商标、固件、软件、图形资源、图标、界面资源及其他专有内容，
+均归其相应权利人所有。
+
+All product names, trademarks, firmware, software, graphics, icons,
+interface resources and other proprietary materials remain the property of
+their respective rights holders.
+
+--------------------------------------------------------------------------------
+2. 研究用途 / Research Purpose Only
+--------------------------------------------------------------------------------
+
+本项目仅用于合法的技术研究、互操作性研究、教育、数字保存，以及用户本人
+合法拥有或获授权使用设备上的实验性研究。
+
+This project is intended solely for legitimate technical research,
+interoperability study, education, preservation, and experimentation on
+devices lawfully owned or operated by the user.
+
+本项目不鼓励、不提供、也不协助：未经授权访问他人设备、侵犯版权、为侵权
+目的绕过技术保护措施、或未经设备所有者授权向设备安装修改后的软件。
+
+This project does not encourage, provide or assist: unauthorized access to
+devices belonging to others, copyright infringement, circumvention of
+technological protection measures for infringing purposes, or installation
+of modified software on devices without the owner's authorization.
+
+--------------------------------------------------------------------------------
+3. 不发布索尼固件与专有资源 / No Sony Firmware or Proprietary Assets
+--------------------------------------------------------------------------------
+
+★ 本仓库【明确不包含】以下内容：
+
+  (a) Sony 原始固件包（BODYDATA.DAT 或任何等价物）
+  (b) 修改后的 Sony 完整固件镜像
+  (c) Sony 的二进制库、可执行文件、内核、驱动（.so / .elf / .ko / vmlinux 等）
+  (d) Sony 的界面资源（.uxc / .uxb / .xdb / .ltt / .ttf / 位图 / 音频）
+  (e) 设备转储（分区镜像、backup dump、setting 目录）
+  (f) 任何设备私有的配置数据、序列号、识别信息
+  (g) 完整反编译产物（整体反汇编清单、完整伪代码导出）
+
+本项目只发布：格式与算法的技术说明、独立分析得出的结论、自写的工具源码、
+自制示意图。分析所需的固件必须由使用者自行从合法来源取得。
+
+This repository explicitly does NOT contain: original or modified Sony
+firmware images; Sony binary libraries, executables, kernels or drivers;
+Sony interface resources; device dumps; device-private configuration or
+identifying data; or complete decompilation outputs.
+
+Only format/algorithm documentation, independently derived findings,
+original tool source code and original diagrams are published. Any firmware
+required for analysis must be obtained independently by the user.
+
+--------------------------------------------------------------------------------
+4. 关于加密密钥与校验值的特别说明 / On Keys and Checksums
+--------------------------------------------------------------------------------
+
+★ 本仓库【不发布】任何可直接用于解密 Sony 固件的密钥值。
+   文档中描述的是：密钥的用途、长度、在包结构中的对应关系、解密流程，
+   但具体密钥字节不在本仓库内。
+
+★ 本仓库【不发布】任何可用于伪造官方固件的签名或校验材料。
+
+本仓库确实记录了完整性校验的算法性质（例如某处使用标准 CRC-32、
+覆盖范围为包体的哪个区间、结果以何种字节序存放）。这类信息属于
+**格式与算法描述**，不包含密钥，也不构成绕过手段。
+
+如果你需要执行解密，请：
+  (i)  使用你自己合法持有的设备与固件；
+  (ii) 自行取得所需密钥；
+  (iii) 在本地完成全部操作，不要上传固件或密钥。
+
+This repository does NOT publish any key values usable to decrypt Sony
+firmware. Documentation describes key purpose, length, position within the
+package structure and the decryption flow — but not the key bytes.
+
+This repository does NOT publish signing or verification material usable to
+forge official firmware.
+
+This repository DOES NOT provide an end-to-end repacking implementation or
+step-by-step firmware modification procedure. Only structural descriptions,
+failure modes and read-only verification tooling are published. The repacking
+path was explored and round-trip verified in a controlled setting, but the
+tooling is deliberately withheld because a ready-to-run implementation would
+convert research findings into a turnkey ability to produce flashable modified
+firmware, and failure of such firmware is irreversible.
+
+本仓库**不提供**端到端的重打包实现，也不提供分步的固件修改操作流程。
+只发布结构描述、失效模式与只读校验工具。回打包路径在受控条件下做过往返验证，
+但工具刻意不公开 —— 因为一个能跑的实现会把"研究结论"变成
+"端到端产出可刷写修改固件"的能力，而这类固件刷入失败是不可逆的。
+
+Integrity-check *algorithm properties* (e.g. that a standard CRC-32 is used,
+which byte range it covers, and its byte order) are documented as format
+description. These contain no keys and provide no circumvention means.
+
+If you need to decrypt, use your own lawfully held device and firmware,
+obtain the required keys yourself, and perform all operations locally.
+Do not upload firmware or keys.
+
+--------------------------------------------------------------------------------
+5. 关于逆向工程分析的边界 / Scope of Reverse-Engineering Analysis
+--------------------------------------------------------------------------------
+
+本项目对 Sony 二进制进行了静态分析以理解其结构与机制。发布时遵循：
+
+  - 只公开**结论与机制描述**（类名、函数名、调用关系、数据结构语义、
+    状态值含义），不公开完整反汇编/伪代码导出；
+  - 必要时引用**极少量**反汇编片段用于说明具体机制，属互操作性研究中的
+    合理引用，不构成对原作品的替代；
+  - 不公开 Sony 的私有文件内容，只描述其格式。
+
+This project performs static analysis of Sony binaries to understand
+structure and mechanisms. Publication follows these rules: only conclusions
+and mechanism descriptions are published (class/function names, call
+relations, data-structure semantics, state-value meanings); complete
+disassembly or pseudocode exports are not; a very small number of
+disassembly fragments may be quoted to explain a specific mechanism, as
+fair quotation for interoperability research; Sony's private file contents
+are not published, only their formats described.
+
+--------------------------------------------------------------------------------
+6. 硬件能力声明 / Hardware Capability
+--------------------------------------------------------------------------------
+
+★ 固件中"存在"某项资源、菜单项、界面元素、配置项或未启用代码路径，
+   **不等于**目标设备的硬件一定支持对应功能。
+
+本项目不会把目标设备不具备的硬件能力描述为"已支持"。
+所有"可行/不可行"的判断都在文档中标注了依据与置信度，并明确区分：
+实测结论、推导结论、推测。
+
+The presence of a resource, menu entry, UI element, configuration value or
+dormant code path in firmware does NOT imply the hardware supports the
+corresponding functionality.
+
+This project does not represent unsupported hardware capabilities as
+supported. Every feasibility judgement is marked with its basis and
+confidence, explicitly distinguishing measured, derived and inferred
+conclusions.
+
+--------------------------------------------------------------------------------
+7. 实验性软件风险 / Experimental Software Risk
+--------------------------------------------------------------------------------
+
+本项目提供的工具、文档、补丁思路、兼容性信息与研究结果均为实验性质。
+
+★ 刷写修改后的固件具有固有风险，包括但不限于：
+  - 设备运行异常 / 无法启动 / 暂时或永久失效
+  - 数据与用户设置丢失
+  - 后续无法安装官方固件
+  - 影响设备保修
+  - 相机在拍摄现场失效造成不可挽回的损失
+
+本项目不保证任何修改、补丁、资源迁移方案或兼容性配置能在任何特定设备上
+正常工作。
+
+All tools, documentation, patch concepts, compatibility information and
+research findings are experimental.
+
+Flashing modified firmware carries inherent risk including, but not limited
+to: device malfunction, failure to boot, temporary or permanent failure;
+loss of data and user settings; inability to install future official
+firmware; loss of warranty coverage; and irrecoverable loss if a camera
+fails during a shoot.
+
+No representation or warranty is made that any modification, patch,
+migration procedure or compatibility profile will function correctly on any
+particular device.
+
+--------------------------------------------------------------------------------
+8. 无担保及责任限制 / No Warranty and Limitation of Liability
+--------------------------------------------------------------------------------
+
+本项目按"现状"及"当前可用状态"提供，仅用于研究目的，不提供任何形式的
+明示或暗示担保，包括但不限于适销性、特定用途适用性与不侵权的担保。
+
+在适用法律允许的最大范围内，本项目贡献者不对以下情况承担责任：设备损坏、
+数据丢失、财产损失、保修失效、服务中断、设备失去正常功能、人身伤害、
+以及因使用本项目直接或间接产生的其他任何损失。
+
+用户对所有实验行为自行承担全部风险。
+
+The project is provided on an "as is" and "as available" basis for research
+purposes, without warranties of any kind, express or implied, including
+merchantability, fitness for a particular purpose and non-infringement.
+
+To the maximum extent permitted by applicable law, contributors shall not be
+liable for device damage, data loss, property loss, warranty consequences,
+service interruption, loss of device functionality, personal injury, or any
+other direct or indirect loss arising from use of this project.
+
+Users perform all experiments entirely at their own risk.
+
+--------------------------------------------------------------------------------
+9. 知识产权 / Intellectual Property
+--------------------------------------------------------------------------------
+
+本项目不主张拥有 Sony 固件、Sony 界面资源、Sony 商标或其他属于 Sony 或
+第三方的专有内容的任何权利。
+
+本项目自有的文档、工具源码与示意图，按仓库内 LICENSE 授权。
+
+公开描述的专有文件格式、数据结构、标识符、接口与软件行为，均理解为通过
+独立分析获得的技术研究结果。
+
+贡献者不得向本项目提交：专有固件二进制、企业机密、泄露源码、未公开签名
+材料、受版权保护的完整图形资源，或本人无合法权利发布的内容。
+
+This project claims no rights over Sony firmware, Sony interface assets,
+Sony trademarks, or other proprietary materials of Sony or third parties.
+
+The project's own documentation, tool source code and diagrams are licensed
+under the LICENSE in this repository.
+
+Described proprietary formats, data structures, identifiers, interfaces and
+software behaviour are understood as independently derived technical
+research results.
+
+Contributors must not submit proprietary firmware binaries, trade secrets,
+leaked source code, unpublished signing material, copyrighted complete
+graphic assets, or content they lack the right to publish.
+
+--------------------------------------------------------------------------------
+10. 机密信息 / Confidential Information
+--------------------------------------------------------------------------------
+
+本项目不索取、不接受商业机密、企业内部保密资料、受 NDA 约束的信息、通过
+非法手段取得的信息，或其他未公开的专有材料。
+
+在合理可行的情况下，本项目公开的技术结论应能通过合法取得的设备与固件、
+公开资料以及项目成员自行完成的独立分析予以复现。
+
+This project does not solicit or accept trade secrets, internal
+confidential material, NDA-protected information, unlawfully obtained
+information, or other non-public proprietary material.
+
+Where reasonably possible, published findings should be independently
+reproducible from lawfully obtained hardware and firmware, public
+documentation, and the contributors' own independent analysis.
+
+--------------------------------------------------------------------------------
+11. 商标 / Trademarks
+--------------------------------------------------------------------------------
+
+Sony、Alpha、α、ZV、BIONZ、VLOGCAM 及相关名称与标识均为其相应权利人的
+商标或注册商标。
+
+本项目中使用这些名称仅用于设备识别、技术讨论与兼容性说明，不代表相应
+权利人给予了赞助、授权或认可。
+
+Sony, Alpha, α, ZV, BIONZ, VLOGCAM and related names and marks are
+trademarks or registered trademarks of their respective owners. Their use
+here is solely for identification, technical discussion and compatibility
+description, and does not indicate sponsorship, authorization or
+endorsement.
+
+--------------------------------------------------------------------------------
+12. 法律提示 / Legal Notice
+--------------------------------------------------------------------------------
+
+本文档中的任何内容均不构成法律意见。
+
+不同国家或地区关于著作权、软件许可、合同、技术保护措施规避、设备维修、
+互操作性、固件修改与逆向工程的法律规定可能存在明显差异。部分司法辖区对
+"绕过技术保护措施"设有独立于版权侵权的责任。
+
+如你不能确定某项研究行为在你所在地是否合法，应在继续操作前咨询当地具有
+相应资质的法律专业人士。
+
+Nothing in this document constitutes legal advice.
+
+Copyright, software licensing, contract, anti-circumvention, repair,
+interoperability, firmware modification and reverse-engineering laws vary
+significantly between jurisdictions. Some jurisdictions impose liability for
+circumventing technological protection measures independently of copyright
+infringement.
+
+If you are uncertain whether a proposed activity is lawful in your
+jurisdiction, obtain advice from a qualified legal professional before
+proceeding.
+
+--------------------------------------------------------------------------------
+13. 使用本仓库即表示 / By Using This Repository You Agree
+--------------------------------------------------------------------------------
+
+  [ ] 我只在我本人合法拥有的设备上使用本项目
+  [ ] 我已自行合法取得分析所需的固件
+  [ ] 我理解刷写修改后的固件可能导致设备不可用
+  [ ] 我不会把本项目用于侵犯他人权利的目的
+  [ ] 我不会上传固件、密钥或设备转储到本仓库
+
+  [ ] I will use this project only on devices I lawfully own
+  [ ] I have lawfully obtained any firmware required for analysis
+  [ ] I understand flashing modified firmware may render a device unusable
+  [ ] I will not use this project to infringe the rights of others
+  [ ] I will not upload firmware, keys or device dumps to this repository
+
+================================================================================
+最后修改 / Last updated: 2026-10-16
+================================================================================

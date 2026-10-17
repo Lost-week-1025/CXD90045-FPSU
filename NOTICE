@@ -1,0 +1,93 @@
+SOY-1F-64
+Copyright (c) 2026 SOY-1F-64 contributors
+
+================================================================================
+适用范围声明 / SCOPE NOTICE
+================================================================================
+
+本文件不是许可证，而是对 LICENSE（MIT）适用范围的说明。
+
+This file is NOT a license. It describes the scope of the MIT license in
+the LICENSE file.
+
+--------------------------------------------------------------------------------
+1. MIT 覆盖什么 / What the MIT license covers
+--------------------------------------------------------------------------------
+
+MIT 许可**仅**适用于本项目自有的原创内容：
+
+  - 工具源码（tools/src/ 下的 .cs 与 .java）
+  - 文档文字（README.md、docs/ 下的 .md）
+  - 示意图（diagrams/ 下的 .svg）
+
+The MIT license applies ONLY to original material produced by this project:
+tool source code, documentation text, and diagrams.
+
+--------------------------------------------------------------------------------
+2. MIT 不覆盖什么 / What it does NOT cover
+--------------------------------------------------------------------------------
+
+MIT 许可**不**适用于，也不授予任何关于以下内容的权利：
+
+  - 索尼固件或其任何部分
+  - 索尼二进制库、可执行文件、内核、驱动
+  - 索尼界面资源（图形、图标、字体、音频、语言数据）
+  - 索尼商标或产品名称
+  - 任何第三方内容
+
+The MIT license does NOT apply to, and confers no rights over: Sony firmware
+or any part of it; Sony binary libraries, executables, kernels or drivers;
+Sony interface resources (graphics, icons, fonts, audio, language data);
+Sony trademarks or product names; or any third-party material.
+
+本仓库自始不含上述内容；如有需要，用户须自行从合法来源取得。
+
+This repository does not contain such material. Users must obtain any
+required firmware independently from lawful sources.
+
+--------------------------------------------------------------------------------
+3. MIT 覆盖不到的事情 / What no license can address
+--------------------------------------------------------------------------------
+
+为避免误解，明确说明：MIT 是**版权**许可，它只处理"复制、修改、分发本作品"。
+
+以下事项**不属于**许可证的范围，也无法通过许可证放弃或授权：
+
+  - 规避技术保护措施相关的法律规定（各司法辖区不同）
+  - 专利权利
+  - 使用者利用这些研究成果所实施的行为
+  - 设备保修、服务条款、合同义务
+
+Please note: MIT is a COPYRIGHT license. It addresses copying, modification and
+distribution of this work only. It does NOT and CANNOT address: anti-
+circumvention law, patent rights, what users do with these research results,
+or device warranty, terms of service and contractual obligations.
+
+--------------------------------------------------------------------------------
+4. 免责与使用前提
+--------------------------------------------------------------------------------
+
+使用本项目的免责条款、风险提示与行为约定，见 DISCLAIMER.txt。
+该文件是使用前提，不是许可证的补充条款。
+
+Terms of use, risk warnings and expectations are in DISCLAIMER.txt.
+That file is a precondition for use, not an addendum to the license.
+
+--------------------------------------------------------------------------------
+5. 一个如实的说明 / An honest statement
+--------------------------------------------------------------------------------
+
+本项目披露的主要是**格式描述与方法论**，而不是可执行产出。
+文件格式与算法属于事实性内容，通常不受版权保护 —— 许可协议在多大程度上
+能约束"如何使用这些知识"，本身是有限的。
+
+本项目选择 MIT，是因为它最清晰地表达了意图：
+**这些研究成果可以被自由使用、验证与改进。**
+
+What this project mainly discloses is format description and methodology rather
+than an executable product. File formats and algorithms are factual material
+that copyright generally does not protect, so a license can only do so much to
+govern how such knowledge is used.
+
+MIT was chosen because it states the intent most clearly: these research
+findings may be freely used, verified and improved.

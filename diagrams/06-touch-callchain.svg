@@ -1,0 +1,86 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="700" viewBox="0 0 960 700" font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+<defs>
+  <marker id="a6" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+    <path d="M0,0 L10,4 L0,8 z" fill="#64748b"/>
+  </marker>
+  <style>
+    .h{font-size:20px;font-weight:700;fill:#0f172a}
+    .sub{font-size:12.5px;fill:#334155}
+    .st{font-size:14px;font-weight:700;fill:#0f172a}
+    .box{font-size:12.5px;font-weight:600;fill:#0f172a}
+    .m{font-size:11.5px;fill:#334155;font-family:Consolas,monospace}
+    .note{font-size:11.5px;fill:#475569}
+    .w{font-size:12px;fill:#ffffff;font-weight:600}
+  </style>
+</defs>
+<rect width="960" height="700" fill="#f8fafc"/>
+<text x="30" y="38" class="h">触摸是否生效：完整调用链（ZV-E10 实测）</text>
+<text x="30" y="60" class="sub">结论先行：不是"功能被禁用"，而是一个 WidgetMode 值在控件创建时被写入。改这个值即可改行为。</text>
+
+<!-- step 1 -->
+<rect x="30" y="82" width="620" height="60" rx="6" fill="#1e293b"/>
+<text x="46" y="106" class="w">① 布局 / 控件创建代码</text>
+<text x="46" y="128" class="m" fill="#cbd5e1">LG_*::Layoutlayout_XXX 构造函数　或　布局引擎</text>
+<line x1="340" y1="142" x2="340" y2="170" stroke="#64748b" stroke-width="2" marker-end="url(#a6)"/>
+<rect x="660" y="144" width="270" height="26" rx="13" fill="#2563eb"/>
+<text x="680" y="162" class="w">虚调用 setDefWidgetMode(模式)</text>
+
+<!-- step 2 -->
+<rect x="30" y="174" width="620" height="86" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="46" y="198" class="st">② LayoutableWidgetBase::setDefWidgetMode(m)</text>
+<text x="46" y="220" class="m">libObj.so @ 0x161CC8　34 B</text>
+<text x="46" y="242" class="m">this-&gt;defWidgetMode = m　　　（写入 this + 0x180）</text>
+<text x="46" y="258" class="note">if (查询() != 3) → 尾调用 ③</text>
+
+<line x1="340" y1="260" x2="340" y2="288" stroke="#64748b" stroke-width="2" marker-end="url(#a6)"/>
+
+<!-- step 3 -->
+<rect x="30" y="292" width="620" height="110" rx="6" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="46" y="316" class="st">③ ux::wgtsys::Widget::setMode(m)</text>
+<text x="46" y="338" class="m">libObj.so @ 0x613780　64 B</text>
+<text x="46" y="360" class="m">if (this-&gt;mode == m) return;　　　// 幂等</text>
+<text x="46" y="382" class="m">this-&gt;mode = m;　　　　　　　　　// 写入 this + 0x21（1 字节）</text>
+
+<line x1="340" y1="402" x2="340" y2="430" stroke="#64748b" stroke-width="2" marker-end="url(#a6)"/>
+
+<!-- step 4 -->
+<rect x="30" y="434" width="620" height="96" rx="6" fill="#ecfdf5" stroke="#059669" stroke-width="1.5"/>
+<text x="46" y="458" class="st">④ 框架按模式决定该控件是否消费触摸</text>
+<text x="46" y="480" class="m">if (m != 0) this-&gt;vt[0x48](m == 3 ? 0 : 1);</text>
+<text x="46" y="502" class="m">this-&gt;member_0x30.someMethod(m == 3 ? 0 : 1);</text>
+<text x="46" y="522" class="note">触摸 / 手势 / 甩动能力本身是框架自带的，不需要实现</text>
+
+<!-- right: mode table -->
+<rect x="672" y="174" width="258" height="356" rx="6" fill="#eff6ff" stroke="#bfdbfe"/>
+<text x="688" y="200" class="st">WidgetMode 取值</text>
+
+<rect x="688" y="214" width="226" height="46" rx="4" fill="#d1fae5" stroke="#059669"/>
+<text x="700" y="234" class="box">0　可触摸</text>
+<text x="700" y="252" class="note">setTouchable(true) 也映射到 0</text>
+
+<rect x="688" y="268" width="226" height="46" rx="4" fill="#fee2e2" stroke="#dc2626"/>
+<text x="700" y="288" class="box">2　不可触摸</text>
+<text x="700" y="306" class="note">setTouchable(false) 映射到 2</text>
+
+<rect x="688" y="322" width="226" height="46" rx="4" fill="#fef3c7" stroke="#d97706"/>
+<text x="700" y="342" class="box">3　特殊分支</text>
+<text x="700" y="360" class="note">三处代码都单独特判它</text>
+
+<rect x="688" y="382" width="226" height="34" rx="4" fill="#f1f5f9" stroke="#cbd5e1"/>
+<text x="700" y="404" class="box">1　（未在 setTouchable 中出现）</text>
+
+<line x1="688" y1="432" x2="914" y2="432" stroke="#bfdbfe"/>
+<text x="688" y="456" class="note">setTouchable 只是把 bool 转成</text>
+<text x="688" y="473" class="note">0 / 2 再转发，本身不做判断。</text>
+<text x="688" y="496" class="note">全固件 setTouchable(true)</text>
+<text x="688" y="513" class="note">从未被调用 —— 说明默认值</text>
+<text x="688" y="530" class="note">就是模式 0（可触摸）。</text>
+
+<!-- bottom -->
+<rect x="30" y="548" width="900" height="130" rx="6" fill="#fef2f2" stroke="#fca5a5"/>
+<text x="48" y="574" class="st" fill="#991b1b">这条链的移植含义</text>
+<text x="48" y="600" class="note">框架能力完整（手势分析器、flick 甩动、拖动、动画转场、可滚动文本都在），不需要重新实现交互。</text>
+<text x="48" y="622" class="note">需要改的只有「控件创建时传入的模式实参」—— 改动面小，且不涉及逻辑重写。</text>
+<text x="48" y="644" class="note">难点在于定位那些调用点：它们是虚调用（ldr rX,[rY,#imm] + blx rX），操作码模式匹配无法直接捕获目标。</text>
+<text x="48" y="666" class="m" fill="#991b1b">→ 施工入口：按 vtable 槽位偏移搜索调用点，再读实参。本文档记录的方法与失败经验同样有价值。</text>
+</svg>

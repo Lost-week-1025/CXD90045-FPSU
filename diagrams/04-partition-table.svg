@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="700" viewBox="0 0 960 700" font-family="Segoe UI, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+<defs><style>
+  .h{font-size:20px;font-weight:700;fill:#0f172a}
+  .sub{font-size:12.5px;fill:#334155}
+  .st{font-size:14px;font-weight:700;fill:#0f172a}
+  .box{font-size:12.5px;font-weight:600;fill:#0f172a}
+  .m{font-size:11.5px;fill:#334155;font-family:Consolas,monospace}
+  .note{font-size:11.5px;fill:#475569}
+  .w{font-size:11.5px;fill:#ffffff;font-family:Consolas,monospace;font-weight:600}
+</style></defs>
+<rect width="960" height="700" fill="#f8fafc"/>
+<text x="30" y="38" class="h">索尼私有分区表结构（CXD90045 平台）</text>
+<text x="30" y="60" class="sub">位于 eMMC 用户区偏移 0，长度 4 KB。结构极简，且校验条件出人意料的宽松。</text>
+
+<!-- left: layout -->
+<rect x="30" y="80" width="470" height="470" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="46" y="106" class="st">内存布局（4,096 B）</text>
+
+<rect x="46" y="120" width="440" height="34" rx="3" fill="#1e293b"/>
+<text x="58" y="142" class="w">+0x000  magic</text>
+<text x="230" y="142" class="w" fill="#94a3b8">u32</text>
+<rect x="46" y="158" width="440" height="34" rx="3" fill="#1e293b"/>
+<text x="58" y="180" class="w">+0x004  version</text>
+<text x="230" y="180" class="w" fill="#94a3b8">u32</text>
+<rect x="46" y="196" width="440" height="34" rx="3" fill="#1e293b"/>
+<text x="58" y="218" class="w">+0x008  n_partition</text>
+<text x="230" y="218" class="w" fill="#94a3b8">u32（实际容量 30）</text>
+
+<rect x="46" y="238" width="440" height="176" rx="3" fill="#dbeafe" stroke="#3b82f6"/>
+<text x="58" y="260" class="box">+0x020  partitions[30]　每项 16 B</text>
+<rect x="58" y="270" width="416" height="24" rx="2" fill="#93c5fd"/>
+<text x="66" y="287" class="box">+0x00  start　（低 9 位必须为 0）</text>
+<rect x="58" y="298" width="416" height="24" rx="2" fill="#93c5fd"/>
+<text x="66" y="315" class="box">+0x04  size　　（低 9 位必须为 0，且非 0）</text>
+<rect x="58" y="326" width="416" height="24" rx="2" fill="#93c5fd"/>
+<text x="66" y="343" class="box">+0x08  type</text>
+<rect x="58" y="354" width="416" height="24" rx="2" fill="#93c5fd"/>
+<text x="66" y="371" class="box">+0x0C  flag　　（bit0 有效）</text>
+<text x="58" y="400" class="note">30 × 16 = 480 B，正好填到 0x200</text>
+
+<rect x="46" y="422" width="440" height="34" rx="3" fill="#7c3aed"/>
+<text x="58" y="444" class="w">+0x200  头部副本（magic / version / n_partition / …）</text>
+<rect x="46" y="460" width="440" height="34" rx="3" fill="#334155"/>
+<text x="58" y="482" class="w">+0x214 … 其余空间</text>
+<text x="46" y="522" class="note">为什么有副本：eMMC 掉电时低地址更易损坏，头部双写提供最低成本冗余。</text>
+
+<!-- right: validation -->
+<rect x="520" y="80" width="410" height="230" rx="6" fill="#fef2f2" stroke="#fca5a5" stroke-width="1.5"/>
+<text x="538" y="106" class="st" fill="#991b1b">★ 校验条件（关键发现）</text>
+<text x="538" y="134" class="m">u32[0x000] == u32[0x200]</text>
+<text x="538" y="156" class="m">u32[0x004] == u32[0x204]</text>
+<text x="538" y="178" class="m">u32[0x008] &lt;= u32[0x208]　（无符号）</text>
+<text x="538" y="208" class="note">只有这三条。而且——</text>
+<rect x="538" y="218" width="374" height="34" rx="3" fill="#ffffff" stroke="#fca5a5"/>
+<text x="550" y="240" class="st" fill="#991b1b">没有任何 magic 常量比对</text>
+<text x="538" y="272" class="note">也就是说：校验只检查"两份头是否一致 + 分区数是否落在</text>
+<text x="538" y="290" class="note">容量范围内"，不校验魔数是否等于某个固定值。</text>
+
+<!-- right: type -->
+<rect x="520" y="326" width="410" height="150" rx="6" fill="#ffffff" stroke="#cbd5e1"/>
+<text x="538" y="352" class="st">type 字段语义</text>
+<text x="538" y="378" class="m">0 = raw</text>
+<text x="538" y="400" class="m">1 = normal（普通文件系统分区）</text>
+<text x="538" y="422" class="m">2 = WBI（wb_register_device 挂载）</text>
+<text x="538" y="444" class="m">3 = LZP 压缩（映射为 dnflashaN）</text>
+<text x="538" y="466" class="note">与包内 0300_partconf\partinf.conf 的 30 条记录逐字段对应。</text>
+
+<!-- bottom -->
+<rect x="30" y="566" width="900" height="108" rx="6" fill="#eff6ff" stroke="#bfdbfe"/>
+<text x="48" y="592" class="st">为什么这一项有价值</text>
+<text x="48" y="618" class="note">① 有了这个结构，就能在没有真机的情况下合成一张自洽的 eMMC 镜像 —— 分区表可生成、可自校验。</text>
+<text x="48" y="640" class="note">② 镜像内绝对偏移 = 用户区基址 + start；ZV-E10 的用户区在镜像 0x400000（前两个 boot 区分各 0x200000）。</text>
+<text x="48" y="662" class="note">③ 这是搭建离线实验环境（QEMU）的前置条件，也是理解"固件包如何落到分区"的最后一环。</text>
+</svg>
