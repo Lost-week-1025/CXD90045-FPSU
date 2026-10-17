@@ -1,6 +1,6 @@
 ================================================================================
 DISCLAIMER / 免责声明
-项目：SOY-1F-64 — Sony CXD90045 平台固件包结构研究与 UI 交互移植可行性分析
+项目：CXD90045-FPSU — Sony CXD90045 平台固件包结构研究与 UI 交互移植可行性分析
 Project: SOY-1F-64 — Firmware Package Structure Research and UI Interaction
          Porting Feasibility Study for the Sony CXD90045 Platform
 ================================================================================
